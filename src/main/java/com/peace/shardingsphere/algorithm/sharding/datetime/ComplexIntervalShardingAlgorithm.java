@@ -10,6 +10,7 @@ import org.locationtech.jts.util.Assert;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -95,7 +96,13 @@ public class ComplexIntervalShardingAlgorithm implements ComplexKeysShardingAlgo
                         while (!lower.isAfter(end)) {
                             Set<String> matchedTable = getMatchedTable(availableTargetNames, lower);
                             tables.addAll(matchedTable);
-                            lower = lower.plusMonths(1);
+                            // 设置开始时间为每月00:00:00，兼容异常跨月案例：开始=2025-05-29，结束=2025-06-03
+                            lower = lower.plusMonths(1)
+                                    .with(TemporalAdjusters.firstDayOfMonth())
+                                    .withHour(0)
+                                    .withMinute(0)
+                                    .withSecond(0)
+                                    .withNano(0);
                         }
                     }
                 });
